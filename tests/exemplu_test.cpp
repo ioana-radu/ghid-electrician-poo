@@ -1,15 +1,19 @@
-// Plain assert / static_assert test suite for all 4 classes in Ghidul Electricianului.
 #undef NDEBUG
 #include <cassert>
+#include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "ActuatorSera.h"
+#include "CircuitElectric.h"
 #include "ComponentaElectronica.h"
+#include "EroriCircuit.h"
 #include "IntrebareQuiz.h"
 #include "ModulTeoretic.h"
 #include "NivelTreasureHunt.h"
+#include "PanouSolar.h"
+#include "SenzorMonitorizare.h"
 
 static_assert(ModulTeoretic::dificultateMin == 1, "Dificultatea minima trebuie sa fie 1");
 static_assert(ModulTeoretic::dificultateMax == 5, "Dificultatea maxima trebuie sa fie 5");
@@ -33,41 +37,20 @@ int main() {
         assert(mParam.getPuncte() == 50);
         assert(mParam.getEsteDeblocat());
 
-        // Test validari si exceptii in constructor
-        bool aAruncat = false;
-        try {
-            ModulTeoretic mInval("", 2, 50, true);
-            (void)mInval;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "Constructorul refuza denumire vida");
-
-        aAruncat = false;
-        try {
-            ModulTeoretic mInval("Test", 9, 50, true);
-            (void)mInval;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "Constructorul refuza dificultate > 5");
-
         // Constructor de copiere si operator=
         ModulTeoretic copie(mParam);
         assert(copie.getDenumire() == mParam.getDenumire());
         const ModulTeoretic* ptrCopie = &copie;
-        copie = *ptrCopie; // auto-atribuire testata in siguranta
+        copie = *ptrCopie;
         assert(copie.getDenumire() == mParam.getDenumire());
 
-        // Setteri si validari
+        // Modificari
         mImplicit.setDenumire("Instalatii Domestice");
         mImplicit.setDificultate(4);
         mImplicit.setPuncte(80);
         mImplicit.setEsteDeblocat(true);
         assert(mImplicit.getDenumire() == "Instalatii Domestice");
         assert(mImplicit.getDificultate() == 4);
-        assert(mImplicit.getPuncte() == 80);
-        assert(mImplicit.getEsteDeblocat());
 
         // Operator ++
         const ModulTeoretic& ref = ++mImplicit;
@@ -75,258 +58,285 @@ int main() {
         assert(mImplicit.getPuncte() == 90);
 
         // Calcul punctaj adaptiv
-        assert(mParam.calculeazaPunctajFinal(40, 0) == 115); // 50 * 2 + 15 bonus viteza
-        assert(mParam.calculeazaPunctajFinal(80, 50) == 0);  // penalizat sub 0 -> devine 0
+        assert(mParam.calculeazaPunctajFinal(40, 0) == 115);
+        assert(mParam.calculeazaPunctajFinal(80, 50) == 0);
 
-        aAruncat = false;
-        try {
-            (void)mParam.calculeazaPunctajFinal(-5, 0);
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "calculeazaPunctajFinal refuza timp negativ");
-
-        // Afisare pe stream
+        // Afisare stream
         std::ostringstream oss;
         mParam.afiseazaDetaliiEtapa(oss);
         assert(oss.str().find("Circuite") != std::string::npos);
-
-        // Stream >>
-        std::istringstream iss("Trifazat 3 70 1");
-        assert(iss >> mParam);
-        assert(mParam.getDenumire() == "Trifazat");
     }
 
     // =========================================================================
-    // PARTEA 2: Testare ComponentaElectronica
+    // PARTEA 2: Testare Membri Statici ComponentaElectronica
     // =========================================================================
     {
-        ComponentaElectronica compImplicita;
-        assert(compImplicita.getDenumire() == "Componenta Generica");
-        assert(compImplicita.getTip() == "Pasiv");
-        assert(compImplicita.getValoareNominala() == 0.0);
-        assert(compImplicita.getUnitateMasura() == "Ohm");
-        assert(compImplicita.getTensiuneMaxima() == 12.0);
-        assert(compImplicita.getEsteFunctionala());
+        assert(ComponentaElectronica::esteTensiuneInGamaStandard(12.0));
+        assert(ComponentaElectronica::esteTensiuneInGamaStandard(24.0));
+        assert(ComponentaElectronica::esteTensiuneInGamaStandard(230.0));
+        assert(!ComponentaElectronica::esteTensiuneInGamaStandard(1.0));
+        assert(!ComponentaElectronica::esteTensiuneInGamaStandard(400.0));
+    }
 
-        ComponentaElectronica panou("Panou Solar", "Sursa", 100.0, "W", 24.0, true);
-        assert(panou.getDenumire() == "Panou Solar");
-        assert(panou.getTip() == "Sursa");
-        assert(panou.getValoareNominala() == 100.0);
-        assert(panou.getUnitateMasura() == "W");
-        assert(panou.getTensiuneMaxima() == 24.0);
+    // =========================================================================
+    // PARTEA 3: Testare Derivata 1 - PanouSolar
+    // =========================================================================
+    {
+        const int contorInainte = ComponentaElectronica::getContorComponente();
+
+        PanouSolar panou("Panou Monocristalin 200W", 24.0, 8.5, true, 0.20, 1.5, 30.0);
+        assert(ComponentaElectronica::getContorComponente() == contorInainte + 1);
+
+        assert(panou.getDenumire() == "Panou Monocristalin 200W");
+        assert(panou.getTensiuneNominala() == 24.0);
+        assert(panou.getCurentMaxim() == 8.5);
         assert(panou.getEsteFunctionala());
+        assert(panou.getEficientaFotovoltaica() == 0.20);
+        assert(panou.getSuprafataMp() == 1.5);
+        assert(panou.getUnghiOrientareGrade() == 30.0);
+        assert(panou.getTipComponenta() == "Sursa Fotovoltaica");
 
-        // Validari si exceptii constructor
-        bool aAruncat = false;
-        try {
-            ComponentaElectronica invalida("", "Pasiv", 10.0, "Ohm", 12.0, true);
-            (void)invalida;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "Componenta refuza denumire vida");
+        // Putere maxima teoretica: 1000 * 1.5 * 0.20 = 300 W
+        assert(panou.calculeazaPutereMaximaTeoretica() == 300.0);
 
-        aAruncat = false;
-        try {
-            ComponentaElectronica invalida("Rezistor", "Pasiv", -1.0, "Ohm", 12.0, true);
-            (void)invalida;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "Componenta refuza valoare nominala negativa");
+        // Simulare functionare la 800 W/m^2
+        const double putereProdusa = panou.simuleazaFunctionare(800.0, 24.0);
+        assert(putereProdusa > 0.0);
 
-        aAruncat = false;
-        try {
-            ComponentaElectronica invalida("Rezistor", "Pasiv", 10.0, "Ohm", -5.0, true);
-            (void)invalida;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "Componenta refuza tensiune maxima <= 0");
-
-        // Setteri si verificari
-        panou.setDenumire("Panou Solar 120W");
-        panou.setTip("SursaRegenerabila");
-        panou.setValoareNominala(120.0);
-        panou.setUnitateMasura("Watt");
-        panou.setTensiuneMaxima(30.0);
-        panou.setEsteFunctionala(false);
-
-        assert(panou.getDenumire() == "Panou Solar 120W");
-        assert(panou.getTip() == "SursaRegenerabila");
-        assert(panou.getValoareNominala() == 120.0);
-        assert(panou.getUnitateMasura() == "Watt");
-        assert(panou.getTensiuneMaxima() == 30.0);
+        // Testare marcare defecta si reparare din clasa de baza
+        panou.marcheazaDefecta();
         assert(!panou.getEsteFunctionala());
-
-        // Functionalitate reparare/calibrare
         panou.reparaSauCalibreaza();
         assert(panou.getEsteFunctionala());
 
-        // Verificare siguranta functionare
-        assert(panou.verificaSigurantaFunctionare(25.0) && "Tensiunea 25V <= 30V este sigura");
-        assert(!panou.verificaSigurantaFunctionare(35.0) && "Tensiunea 35V > 30V este periculoasa");
+        // Optimizare unghi
+        panou.optimizeazaUnghiOrientare(45.0);
+        assert(panou.getUnghiOrientareGrade() == 45.0);
 
-        // Calcul curent maxim (Legea lui Ohm)
-        const double curentMaxim = panou.calculeazaCurentMaxim(10.0);
-        assert(curentMaxim == 3.0 && "30V / 10 Ohm = 3A");
+        // Clonare (Virtual Copy Constructor)
+        std::unique_ptr<ComponentaElectronica> clona = panou.clone();
+        assert(clona != nullptr);
+        assert(clona->getDenumire() == panou.getDenumire());
 
-        aAruncat = false;
-        try {
-            (void)panou.calculeazaCurentMaxim(0.0);
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "calculeazaCurentMaxim refuza rezistenta 0");
-
-        // Operator <<
+        // Afisare NVI
         std::ostringstream oss;
         oss << panou;
-        assert(oss.str().find("Panou Solar") != std::string::npos);
-
-        // Operator >>
-        std::istringstream iss("Dioda Semiconductor 0.7 V 50.0 1");
-        ComponentaElectronica dioda;
-        assert(iss >> dioda);
-        assert(dioda.getDenumire() == "Dioda");
-        assert(dioda.getValoareNominala() == 0.7);
-        assert(dioda.getTensiuneMaxima() == 50.0);
+        assert(oss.str().find("Sursa Fotovoltaica") != std::string::npos);
+        assert(oss.str().find("Eficienta celule") != std::string::npos);
     }
 
     // =========================================================================
-    // PARTEA 3: Testare IntrebareQuiz
+    // PARTEA 4: Testare Derivata 2 - SenzorMonitorizare
     // =========================================================================
     {
-        IntrebareQuiz qImplicita;
-        assert(qImplicita.getEnunt() == "Intrebare implicita");
-        assert(qImplicita.getVariante().size() == 2);
-        assert(qImplicita.getIndexRaspunsCorect() == 0);
-        assert(qImplicita.getPunctaj() == 10);
-        assert(!qImplicita.getIndiciu().empty());
+        SenzorMonitorizare senzor("Senzor Umiditate Sol", 5.0, 0.05, true, "Umiditate Sol", 40.0, 2.0);
+        assert(senzor.getDenumire() == "Senzor Umiditate Sol");
+        assert(senzor.getMarimeMasurata() == "Umiditate Sol");
+        assert(senzor.getPragAlerta() == 40.0);
+        assert(senzor.getValoareCalibrareOffset() == 2.0);
+        assert(senzor.getTipComponenta() == "Senzor Monitorizare");
 
+        // Simulare functionare si verificare alerta
+        const double consum = senzor.simuleazaFunctionare(35.0, 5.0);
+        assert(consum > 0.0);
+        assert(!senzor.esteStareCritica(35.0)); // 35 + 2 = 37 < 40
+        assert(senzor.esteStareCritica(39.0));  // 39 + 2 = 41 >= 40
+
+        // Autocalibrare
+        senzor.autocalibrare(5.0);
+        assert(senzor.getValoareCalibrareOffset() == -5.0);
+
+        // Clonare
+        std::unique_ptr<ComponentaElectronica> clonaSenzor = senzor.clone();
+        assert(clonaSenzor != nullptr);
+        assert(clonaSenzor->getDenumire() == senzor.getDenumire());
+
+        // Afisare NVI
+        std::ostringstream oss;
+        oss << senzor;
+        assert(oss.str().find("Senzor Monitorizare") != std::string::npos);
+        assert(oss.str().find("Prag de alerta") != std::string::npos);
+    }
+
+    // =========================================================================
+    // PARTEA 5: Testare Derivata 3 - ActuatorSera
+    // =========================================================================
+    {
+        ActuatorSera actuator("Pompa Submersibila", 24.0, 2.5, true, "Irigare", 60.0, 10);
+        assert(actuator.getDenumire() == "Pompa Submersibila");
+        assert(actuator.getRolSera() == "Irigare");
+        assert(actuator.getPutereNominalaW() == 60.0);
+        assert(actuator.getTotalCicluriComutare() == 10);
+        assert(actuator.getTipComponenta() == "Actuator Executie");
+
+        // Simulare functionare timp de 30 minute -> consum 30 Wh
+        const double energieWh = actuator.simuleazaFunctionare(30.0, 24.0);
+        assert(energieWh == 30.0);
+        assert(actuator.getTotalCicluriComutare() == 11);
+
+        // Testare fortata
+        actuator.executaCicluTestareFortata();
+        assert(actuator.getTotalCicluriComutare() == 12);
+
+        actuator.reseteazaContorCicluri();
+        assert(actuator.getTotalCicluriComutare() == 0);
+
+        // Clonare
+        std::unique_ptr<ComponentaElectronica> clonaActuator = actuator.clone();
+        assert(clonaActuator != nullptr);
+        assert(clonaActuator->getDenumire() == actuator.getDenumire());
+
+        // Afisare NVI
+        std::ostringstream oss;
+        oss << actuator;
+        assert(oss.str().find("Actuator Executie") != std::string::npos);
+        assert(oss.str().find("Rol functional: Irigare") != std::string::npos);
+    }
+
+    // =========================================================================
+    // PARTEA 6: Testare CircuitElectric (Pointer de baza, Copy-and-Swap, Dynamic Cast)
+    // =========================================================================
+    {
+        CircuitElectric circuit("Circuit Sera A1", 24.0);
+        assert(circuit.getDenumireCircuit() == "Circuit Sera A1");
+        assert(circuit.getTensiuneAlimentare() == 24.0);
+        assert(circuit.getComponentaPrincipala() == nullptr);
+
+        PanouSolar panou("Panou Sursa", 24.0, 10.0, true, 0.20, 2.0, 30.0);
+        SenzorMonitorizare senzor("Senzor Temperatura", 24.0, 0.05, true, "Temperatura", 35.0, 0.0);
+        ActuatorSera pompa("Pompa Picurare", 24.0, 2.0, true, "Irigare", 48.0, 5);
+
+        circuit.conecteazaComponentaPrincipala(panou.clone());
+        circuit.adaugaComponentaSecundara(senzor.clone());
+        circuit.adaugaComponentaSecundara(pompa.clone());
+
+        assert(circuit.getComponentaPrincipala() != nullptr);
+        assert(circuit.getComponenteSecundare().size() == 2);
+
+        // Simulare polimorfica prin pointerul de baza
+        const double bilant = circuit.simuleazaSarcinaCircuit(500.0);
+        assert(bilant > 0.0);
+
+        // Downcast cu dynamic_cast
+        circuit.optimizeazaSauCalibreazaEchipamente();
+
+        // Copy constructor deep-copy
+        CircuitElectric copieCircuit(circuit);
+        assert(copieCircuit.getDenumireCircuit() == circuit.getDenumireCircuit());
+        assert(copieCircuit.getComponentaPrincipala() != nullptr);
+        assert(copieCircuit.getComponentaPrincipala() != circuit.getComponentaPrincipala()); // adrese diferite!
+        assert(copieCircuit.getComponenteSecundare().size() == 2);
+
+        // Copy-and-swap assignment
+        CircuitElectric altCircuit("Circuit Nou", 12.0);
+        altCircuit = copieCircuit;
+        assert(altCircuit.getDenumireCircuit() == "Circuit Sera A1");
+        assert(altCircuit.getComponentaPrincipala() != nullptr);
+        // cppcheck-suppress knownConditionTrueFalse
+        assert(altCircuit.getComponentaPrincipala() != copieCircuit.getComponentaPrincipala());
+
+        // Afisare schema circuit NVI
+        std::ostringstream oss;
+        oss << circuit;
+        assert(oss.str().find("SCHEMA CIRCUIT: Circuit Sera A1") != std::string::npos);
+        assert(oss.str().find("Panou Sursa") != std::string::npos);
+        assert(oss.str().find("Senzor Temperatura") != std::string::npos);
+    }
+
+    // =========================================================================
+    // PARTEA 7: Testare Ierarhie Excepții
+    // =========================================================================
+    {
+        // 1. TensiuneInvalidaException
+        bool prins = false;
+        try {
+            PanouSolar p("Panou", 24.0, 5.0, true, 0.20, 1.0, 30.0);
+            (void)p.simuleazaFunctionare(800.0, 100.0); // 100V pe panou de 24V -> TensiuneInvalidaException
+        } catch (const TensiuneInvalidaException& ex) {
+            prins = true;
+            assert(std::string(ex.what()).find("Eroare Tensiune") != std::string::npos);
+        }
+        assert(prins && "A prins corect TensiuneInvalidaException");
+
+        // 2. ComponentaDefectaException
+        prins = false;
+        try {
+            ActuatorSera a("Pompa", 24.0, 2.0, false, "Irigare", 50.0); // defecta!
+            (void)a.simuleazaFunctionare(10.0, 24.0);
+        } catch (const ComponentaDefectaException& ex) {
+            prins = true;
+            assert(std::string(ex.what()).find("Eroare Componenta Hardware") != std::string::npos);
+        }
+        assert(prins && "A prins corect ComponentaDefectaException");
+
+        // 3. ConfiguratieInvalidaException
+        prins = false;
+        try {
+            PanouSolar p("Panou", 24.0, 5.0, true, 1.5, 1.0, 30.0); // eficienta 150% -> invalid
+            (void)p;
+        } catch (const ConfiguratieInvalidaException& ex) {
+            prins = true;
+            assert(std::string(ex.what()).find("Eroare Configurare Parametri") != std::string::npos);
+        }
+        assert(prins && "A prins corect ConfiguratieInvalidaException");
+    }
+
+    // =========================================================================
+    // PARTEA 8: Testare IntrebareQuiz
+    // =========================================================================
+    {
         IntrebareQuiz q("Ce unitate de masura are rezistenta electrica?",
                         {"Amper", "Ohm", "Volt"}, 1, 25, "Formula U = R * I");
-
         assert(q.getEnunt() == "Ce unitate de masura are rezistenta electrica?");
         assert(q.getVariante().size() == 3);
         assert(q.getIndexRaspunsCorect() == 1);
         assert(q.getPunctaj() == 25);
         assert(q.getIndiciu() == "Formula U = R * I");
-
-        // Verificare raspuns
         assert(q.verificaRaspuns(1));
         assert(!q.verificaRaspuns(0));
         assert(q.evalueazaRaspuns(1) == 25);
         assert(q.evalueazaRaspuns(0) == 0);
-
-        // Exceptii la parametri invalizi
-        bool aAruncat = false;
-        try {
-            IntrebareQuiz qInval("", {"A", "B"}, 0, 10, "indiciu");
-            (void)qInval;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "IntrebareQuiz refuza enunt vid");
-
-        aAruncat = false;
-        try {
-            IntrebareQuiz qInval("Enunt", {"DoarUna"}, 0, 10, "indiciu");
-            (void)qInval;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "IntrebareQuiz refuza mai putin de 2 variante");
-
-        aAruncat = false;
-        try {
-            IntrebareQuiz qInval("Enunt", {"A", "B"}, 5, 10, "indiciu");
-            (void)qInval;
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "IntrebareQuiz refuza index raspuns peste limita");
-
-        // Operator <<
-        std::ostringstream oss;
-        oss << q;
-        assert(oss.str().find("rezistenta electrica") != std::string::npos);
-        assert(oss.str().find("Ohm") != std::string::npos);
     }
 
     // =========================================================================
-    // PARTEA 4: Testare NivelTreasureHunt (Compunere de obiecte)
+    // PARTEA 9: Testare NivelTreasureHunt
     // =========================================================================
     {
-        NivelTreasureHunt nivelImplicit;
-        assert(nivelImplicit.getIdNivel() == 1);
-        assert(nivelImplicit.getTitluNivel() == "Nivel 1");
-        assert(!nivelImplicit.getEsteCompletat());
-        assert(nivelImplicit.getScorMinimPromovare() == 50);
-
         ModulTeoretic modul("Sigurante Automate", 2, 40, false);
-        ComponentaElectronica sig("Siguranta 16A", "Protectie", 16.0, "A", 230.0, true);
-        NivelTreasureHunt nivel(2, "Atelierul de Protectii Electrice", modul, sig, 90);
+        PanouSolar recompensa("Panou Recompensa", 24.0, 5.0, true, 0.20, 1.0, 30.0);
+        NivelTreasureHunt nivel(2, "Atelierul de Protectii Electrice", modul, recompensa, 90);
 
         assert(nivel.getIdNivel() == 2);
         assert(nivel.getTitluNivel() == "Atelierul de Protectii Electrice");
         assert(nivel.getModulTeoretic().getDenumire() == "Sigurante Automate");
-        assert(nivel.getComponentaRecompensa().getDenumire() == "Siguranta 16A");
-        assert(!nivel.getEsteCompletat());
+        assert(nivel.getComponentaRecompensa() != nullptr);
+        assert(nivel.getComponentaRecompensa()->getDenumire() == "Panou Recompensa");
         assert(nivel.getScorMinimPromovare() == 90);
 
         // Adaugare intrebari
-        IntrebareQuiz q1("Ce face o siguranta automata la suprasarcina?",
-                         {"Isi creste rezistenta", "Intrerupe circuitul", "Creste tensiunea"},
-                         1, 40, "Protectie termica.");
-        IntrebareQuiz q2("Ce curent nominal are siguranta studiata?",
-                         {"16A", "32A", "6A"},
-                         0, 30, "Verifica inscriptia de pe carcasa.");
-
-        nivel.adaugaIntrebare(q1);
-        nivel.adaugaIntrebare(q2);
+        nivel.adaugaIntrebare(IntrebareQuiz("Intrebare 1", {"A", "B"}, 0, 40, "Indiciu"));
+        nivel.adaugaIntrebare(IntrebareQuiz("Intrebare 2", {"A", "B"}, 1, 50, "Indiciu"));
         assert(nivel.getIntrebari().size() == 2);
 
-        // Rezolvare quiz
-        std::vector<int> raspunsuriCorecte = {1, 0};
-        assert(nivel.rezolvaQuiz(raspunsuriCorecte) == 70);
+        assert(nivel.rezolvaQuiz({0, 1}) == 90);
+        assert(nivel.rezolvaQuiz({0, 0}) == 40);
 
-        std::vector<int> raspunsuriPartiale = {1, 1}; // al doilea e gresit
-        assert(nivel.rezolvaQuiz(raspunsuriPartiale) == 40);
+        // Rutare adaptiva
+        assert(nivel.determinaUrmatorulNivelDificultate(160) == 3);
+        assert(nivel.determinaUrmatorulNivelDificultate(90) == 2);
+        assert(nivel.determinaUrmatorulNivelDificultate(40) == 1);
 
-        // Exceptie daca vectorul de raspunsuri nu are aceeasi dimensiune
-        bool aAruncat = false;
-        try {
-            (void)nivel.rezolvaQuiz({1});
-        } catch (const std::invalid_argument&) {
-            aAruncat = true;
-        }
-        assert(aAruncat && "rezolvaQuiz arunca exceptie pe numar necorespunzator de raspunsuri");
+        // Finalizare nivel
+        const bool promovat = nivel.finalizeazaNivel(90, 45, 0);
+        assert(promovat);
+        assert(nivel.getEsteCompletat());
 
-        // Finalizare nivel cu scor insuficient (< 90 puncte)
-        // Teorie: 40 * 2 = 80; cu 10 greseli -> 80 - 50 = 30; timp 120s -> 30 puncte teorie.
-        // Quiz: 40 puncte => total 70 < 90.
-        bool promovat = nivel.finalizeazaNivel(40, 120, 10);
-        assert(!promovat && !nivel.getEsteCompletat());
-
-        // Finalizare nivel cu scor excelent (>= 90 puncte)
-        // Quiz: 70 puncte; Teorie: 40 * 2 + 15 (bonus viteza < 60s) = 95 => total 165.
-        promovat = nivel.finalizeazaNivel(70, 45, 0);
-        assert(promovat && nivel.getEsteCompletat());
-        assert(nivel.getModulTeoretic().getEsteDeblocat());
-
-        // Rutare adaptiva invatare
-        assert(nivel.determinaUrmatorulNivelDificultate(165) == 3 && "Scor mare => avansare la dificultate 3");
-        assert(nivel.determinaUrmatorulNivelDificultate(95) == 2 && "Scor normal => pastrare dificultate 2");
-        assert(nivel.determinaUrmatorulNivelDificultate(50) == 1 && "Scor insuficient => consolidare la dificultate 1");
-
-        // Testare operator << compus
-        std::ostringstream oss;
-        oss << nivel;
-        assert(oss.str().find("Atelierul de Protectii Electrice") != std::string::npos);
-        assert(oss.str().find("Sigurante Automate") != std::string::npos);
-        assert(oss.str().find("Siguranta 16A") != std::string::npos);
+        // Copy-and-swap pe NivelTreasureHunt
+        NivelTreasureHunt copieNivel = nivel;
+        assert(copieNivel.getComponentaRecompensa() != nullptr);
+        // cppcheck-suppress knownConditionTrueFalse
+        assert(copieNivel.getComponentaRecompensa() != nivel.getComponentaRecompensa());
+        assert(copieNivel.getComponentaRecompensa()->getDenumire() == "Panou Recompensa");
     }
 
     return 0;

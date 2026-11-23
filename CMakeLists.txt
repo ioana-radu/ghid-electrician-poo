@@ -62,10 +62,20 @@ include(cmake/RegisterTests.cmake)
 
 # always STATIC (simpler); TBD if we ever want dynamic for this; BUILD_SHARED_LIBS is for ext deps
 add_library(${MAIN_LIBRARY_NAME} STATIC
+        src/EroriCircuit.cpp
+        include/EroriCircuit.h
         src/ModulTeoretic.cpp
         include/ModulTeoretic.h
         src/ComponentaElectronica.cpp
         include/ComponentaElectronica.h
+        src/PanouSolar.cpp
+        include/PanouSolar.h
+        src/SenzorMonitorizare.cpp
+        include/SenzorMonitorizare.h
+        src/ActuatorSera.cpp
+        include/ActuatorSera.h
+        src/CircuitElectric.cpp
+        include/CircuitElectric.h
         src/IntrebareQuiz.cpp
         include/IntrebareQuiz.h
         src/NivelTreasureHunt.cpp

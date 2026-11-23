@@ -2,53 +2,62 @@
 #define COMPONENTA_ELECTRONICA_H
 
 #include <iosfwd>
+#include <memory>
 #include <string>
 
+// Clasa de baza abstracta pentru toate componentele din sera inteligenta
 class ComponentaElectronica {
 private:
-    std::string denumire = "Componenta Generica";
-    std::string tip = "Pasiv"; // Pasiv, Semiconductor, Sursa, Protectie, Senzor
-    double valoareNominala = 0.0;
-    std::string unitateMasura = "Ohm";
-    double tensiuneMaximaSuportata = 12.0;
-    bool esteFunctionala = true;
+    static int contorComponente;
 
-    void valideaza() const;
+    std::string denumire;
+    double tensiuneNominala; // in Volti (V)
+    double curentMaxim;      // in Amperi (A)
+    bool esteFunctionala;
+
+    void valideazaParametriBaza() const;
+
+protected:
+    // Metoda virtuala pura pentru afisarea specifica a fiecarei clase derivate (NVI)
+    virtual void afiseazaDetaliiSpecifice(std::ostream& out) const = 0;
 
 public:
-    // Constructori
-    ComponentaElectronica();
-    ComponentaElectronica(std::string denumireComp, std::string tipComp,
-                          double valoareNominalaComp, std::string unitateMasuraComp,
-                          double tensiuneMax, bool functionala);
+    // Constructori si Destructor virtual
+    ComponentaElectronica(std::string denumireComp, double tensiuneNominalaComp,
+                          double curentMaximComp, bool functional = true);
+    ComponentaElectronica(const ComponentaElectronica& altul);
+    ComponentaElectronica& operator=(const ComponentaElectronica& altul);
+    virtual ~ComponentaElectronica();
 
-    // Getteri și Setteri
-    [[nodiscard]] const std::string& getDenumire() const;
-    void setDenumire(std::string denumireNoua);
+    // Constructor virtual (Pattern-ul Prototype / Clone)
+    [[nodiscard]] virtual std::unique_ptr<ComponentaElectronica> clone() const = 0;
 
-    [[nodiscard]] const std::string& getTip() const;
-    void setTip(std::string tipNou);
+    // Metoda virtuala pura specifica temei (simularea comportamentului in circuit)
+    [[nodiscard]] virtual double simuleazaFunctionare(double parametruMediu, double tensiuneAlimentare) = 0;
 
-    [[nodiscard]] double getValoareNominala() const;
-    void setValoareNominala(double valoareNoua);
+    // Identificator textual al tipului de componenta
+    [[nodiscard]] virtual std::string getTipComponenta() const = 0;
 
-    [[nodiscard]] const std::string& getUnitateMasura() const;
-    void setUnitateMasura(std::string unitateNoua);
+    // Interfata Non-Virtuala (NVI) pentru afisare polimorfica
+    void afiseaza(std::ostream& out) const;
 
-    [[nodiscard]] double getTensiuneMaxima() const;
-    void setTensiuneMaxima(double tensiuneNoua);
-
-    [[nodiscard]] bool getEsteFunctionala() const;
-    void setEsteFunctionala(bool stare);
-
-    // Metode specifice temei
-    [[nodiscard]] bool verificaSigurantaFunctionare(double tensiuneCircuit) const;
+    // Metode de business
     void reparaSauCalibreaza();
-    [[nodiscard]] double calculeazaCurentMaxim(double rezistentaCircuit) const;
+    void marcheazaDefecta();
+    [[nodiscard]] bool verificaCompatibilitateTensiune(double tensiuneCircuit) const;
 
-    // Operatori
+    // Getteri
+    [[nodiscard]] const std::string& getDenumire() const;
+    [[nodiscard]] double getTensiuneNominala() const;
+    [[nodiscard]] double getCurentMaxim() const;
+    [[nodiscard]] bool getEsteFunctionala() const;
+
+    // Membri statici
+    [[nodiscard]] static int getContorComponente();
+    [[nodiscard]] static bool esteTensiuneInGamaStandard(double tensiune);
+
+    // Operator de afisare prieten (apeleaza afiseaza - NVI)
     friend std::ostream& operator<<(std::ostream& out, const ComponentaElectronica& comp);
-    friend std::istream& operator>>(std::istream& in, ComponentaElectronica& comp);
 };
 
 #endif // COMPONENTA_ELECTRONICA_H
