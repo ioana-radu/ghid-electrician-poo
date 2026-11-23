@@ -1,6 +1,11 @@
 # Ghidul Electricianului: Treasure Hunt Educativ (Misiunea Sera Inteligentă)
 
+## Descriere Proiect
 Aplicație educativă sub formă de vânătoare de comori (Treasure Hunt) dedicată noțiunilor fundamentale de electrotehnică și teorie a circuitelor. Ucenicul electrician explorează ateliere tematice, parcurge module teoretice, rezolvă quiz-uri cu învățare adaptivă și colectează componente electronice pentru a reabilita și alimenta circuitul de comandă al unei sere solare autonome.
+
+## Etape Proiect
+* **Etapa 1:** Implementarea claselor de bază, încapsulare, constructori, destructori și supraîncărcarea operatorilor.
+* **Etapa 2:** Ierarhie de moștenire (PanouSolar, SenzorMonitorizare, ActuatorSera, AcumulatorLitiu), interfață NVI, smart pointers, downcast cu `dynamic_cast`, Copy-and-Swap și ierarhie proprie de excepții.
 
 ### Folosiți template-ul corespunzător grupei voastre!
 
