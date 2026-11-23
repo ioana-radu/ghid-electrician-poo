@@ -74,6 +74,8 @@ add_library(${MAIN_LIBRARY_NAME} STATIC
         include/SenzorMonitorizare.h
         src/ActuatorSera.cpp
         include/ActuatorSera.h
+        src/AcumulatorLitiu.cpp
+        include/AcumulatorLitiu.h
         src/CircuitElectric.cpp
         include/CircuitElectric.h
         src/IntrebareQuiz.cpp

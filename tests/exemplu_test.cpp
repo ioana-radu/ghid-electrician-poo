@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ActuatorSera.h"
+#include "AcumulatorLitiu.h"
 #include "CircuitElectric.h"
 #include "ComponentaElectronica.h"
 #include "EroriCircuit.h"
@@ -194,7 +195,40 @@ int main() {
     }
 
     // =========================================================================
-    // PARTEA 6: Testare CircuitElectric (Pointer de baza, Copy-and-Swap, Dynamic Cast)
+    // PARTEA 6: Testare Derivata 4 - AcumulatorLitiu
+    // =========================================================================
+    {
+        AcumulatorLitiu baterie("Banc LiFePO4", 24.0, 50.0, true, 100.0, 80.0, 10);
+        assert(baterie.getDenumire() == "Banc LiFePO4");
+        assert(baterie.getCapacitateAmperiOra() == 100.0);
+        assert(baterie.getNivelIncarcareProcent() == 80.0);
+        assert(baterie.getCicluriIncarcare() == 10);
+        assert(baterie.getTipComponenta() == "Acumulator Energie");
+
+        // Energie utila la 80% SoC: 100 Ah * 24 V * 0.8 = 1920 Wh
+        const double energieDisponibila = baterie.simuleazaFunctionare(500.0, 24.0);
+        assert(energieDisponibila == 1920.0);
+        assert(baterie.getCicluriIncarcare() == 11);
+
+        // Reincarcare maxima: 100 Ah * 24 V = 2400 Wh
+        baterie.reincarcaLaCapacitateMaxima();
+        assert(baterie.getNivelIncarcareProcent() == 100.0);
+        assert(baterie.calculeazaEnergieTotalaWh() == 2400.0);
+
+        // Clonare
+        std::unique_ptr<ComponentaElectronica> clonaBaterie = baterie.clone();
+        assert(clonaBaterie != nullptr);
+        assert(clonaBaterie->getDenumire() == baterie.getDenumire());
+
+        // Afisare NVI
+        std::ostringstream oss;
+        oss << baterie;
+        assert(oss.str().find("Acumulator Energie") != std::string::npos);
+        assert(oss.str().find("Capacitate stocare") != std::string::npos);
+    }
+
+    // =========================================================================
+    // PARTEA 7: Testare CircuitElectric (Pointer de baza, Copy-and-Swap, Dynamic Cast)
     // =========================================================================
     {
         CircuitElectric circuit("Circuit Sera A1", 24.0);
@@ -244,7 +278,7 @@ int main() {
     }
 
     // =========================================================================
-    // PARTEA 7: Testare Ierarhie Excepții
+    // PARTEA 8: Testare Ierarhie Excepții
     // =========================================================================
     {
         // 1. TensiuneInvalidaException
@@ -282,7 +316,7 @@ int main() {
     }
 
     // =========================================================================
-    // PARTEA 8: Testare IntrebareQuiz
+    // PARTEA 9: Testare IntrebareQuiz
     // =========================================================================
     {
         IntrebareQuiz q("Ce unitate de masura are rezistenta electrica?",
@@ -299,7 +333,7 @@ int main() {
     }
 
     // =========================================================================
-    // PARTEA 9: Testare NivelTreasureHunt
+    // PARTEA 10: Testare NivelTreasureHunt
     // =========================================================================
     {
         ModulTeoretic modul("Sigurante Automate", 2, 40, false);

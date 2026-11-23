@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "ActuatorSera.h"
+#include "AcumulatorLitiu.h"
 #include "CircuitElectric.h"
 #include "ComponentaElectronica.h"
 #include "EroriCircuit.h"
@@ -37,6 +38,7 @@ int main() {
     PanouSolar panouPrincipal("Panou Fotovoltaic Monocristalin", 24.0, 10.0, true, 0.22, 1.8, 30.0);
     SenzorMonitorizare senzorSol("Senzor Umiditate Industrial 24V", 24.0, 0.05, true, "Umiditate Sol", 40.0, 0.0);
     ActuatorSera pompaIrigare("Pompa Submersibila 24V", 24.0, 3.5, true, "Irigare Sera", 60.0, 0);
+    AcumulatorLitiu baterieBanc("Banc Acumulatori LiFePO4", 24.0, 40.0, true, 100.0, 85.0, 12);
 
     std::cout << "  - Numar total componente create in memorie: "
               << ComponentaElectronica::getContorComponente() << "\n\n";
@@ -48,6 +50,7 @@ int main() {
     std::cout << panouPrincipal << "\n";
     std::cout << senzorSol << "\n";
     std::cout << pompaIrigare << "\n";
+    std::cout << baterieBanc << "\n";
 
     // -------------------------------------------------------------------------
     // 4. Clasa cu atribut pointer la clasa de baza: CircuitElectric
@@ -59,9 +62,10 @@ int main() {
     // Conectam panoul fotovoltaic ca sursa principala (folosim constructorul virtual clone)
     circuitSera.conecteazaComponentaPrincipala(panouPrincipal.clone());
 
-    // Adaugam senzori si actuatoare ca si componente secundare
+    // Adaugam senzori, actuatoare si stocare ca si componente secundare polimorfice
     circuitSera.adaugaComponentaSecundara(senzorSol.clone());
     circuitSera.adaugaComponentaSecundara(pompaIrigare.clone());
+    circuitSera.adaugaComponentaSecundara(baterieBanc.clone());
 
     // Afisare schema circuit apeland interfata NVI a componentelor prin pointeri de baza
     std::cout << circuitSera << "\n";
