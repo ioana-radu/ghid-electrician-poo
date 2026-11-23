@@ -55,7 +55,7 @@ int main() {
         // Constructor de copiere si operator=
         ModulTeoretic copie(mParam);
         assert(copie.getDenumire() == mParam.getDenumire());
-        ModulTeoretic* ptrCopie = &copie;
+        const ModulTeoretic* ptrCopie = &copie;
         copie = *ptrCopie; // auto-atribuire testata in siguranta
         assert(copie.getDenumire() == mParam.getDenumire());
 
