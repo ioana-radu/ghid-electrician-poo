@@ -1,2 +1,2 @@
-5
-11 22 33 44 55
+TablouDistributie 3 150 1
+SenzorTemperatura Senzor 5.0 V 5.0 1

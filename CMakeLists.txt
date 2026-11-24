@@ -61,16 +61,31 @@ include(cmake/RegisterTests.cmake)
 # Configure sources
 
 # always STATIC (simpler); TBD if we ever want dynamic for this; BUILD_SHARED_LIBS is for ext deps
-add_library(${MAIN_LIBRARY_NAME} STATIC)
+add_library(${MAIN_LIBRARY_NAME} STATIC
+        src/EroriCircuit.cpp
+        include/EroriCircuit.h
+        src/ModulTeoretic.cpp
+        include/ModulTeoretic.h
+        src/ComponentaElectronica.cpp
+        include/ComponentaElectronica.h
+        src/PanouSolar.cpp
+        include/PanouSolar.h
+        src/SenzorMonitorizare.cpp
+        include/SenzorMonitorizare.h
+        src/ActuatorSera.cpp
+        include/ActuatorSera.h
+        src/AcumulatorLitiu.cpp
+        include/AcumulatorLitiu.h
+        src/CircuitElectric.cpp
+        include/CircuitElectric.h
+        src/IntrebareQuiz.cpp
+        include/IntrebareQuiz.h
+        src/NivelTreasureHunt.cpp
+        include/NivelTreasureHunt.h)
 
 # NOTE: update EXECUTABLE_NAME in .github/workflows/cmake.yml when changing name here
 add_executable(${MAIN_EXECUTABLE_NAME}
-    app/main.cpp
-)
-target_sources(${MAIN_LIBRARY_NAME}
-    PRIVATE
-        src/Example.cpp
-        src/internal/Detail.cpp
+        app/main.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )

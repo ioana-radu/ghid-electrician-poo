@@ -1,7 +1,9 @@
 
 build/
+cmake-build-debug/
 install_dir/
 cppcheck-scan-dir/
+.idea/
 .local/
 
 # Created by https://www.toptal.com/developers/gitignore/api/c++,clion,cmake,codeblocks,emacs,gcov,sublimetext,vim,visualstudio,visualstudiocode,xcode
