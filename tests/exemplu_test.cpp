@@ -361,6 +361,8 @@ int main() {
         assert(nivel.determinaUrmatorulNivelDificultate(40) == 1);
 
         // Finalizare nivel
+        assert(!nivel.finalizeazaNivel(0, 1, 2));
+        assert(!nivel.getEsteCompletat());
         const bool promovat = nivel.finalizeazaNivel(90, 45, 0);
         assert(promovat);
         assert(nivel.getEsteCompletat());

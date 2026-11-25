@@ -60,7 +60,7 @@ int IntrebareQuiz::evalueazaRaspuns(int indexAles) const {
 }
 
 std::ostream& operator<<(std::ostream& out, const IntrebareQuiz& intrebare) {
-    out << "[Intrebare (" << intrebare.punctajIntrebare << " pct)] " << intrebare.enunt << "\n";
+    out << "Intrebare (" << intrebare.punctajIntrebare << " pct): " << intrebare.enunt << "\n";
     for (std::size_t i = 0; i < intrebare.variante.size(); ++i) {
         out << "   " << i + 1 << ") " << intrebare.variante[i] << "\n";
     }

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include "ActuatorSera.h"
@@ -13,7 +14,10 @@
 #include "PanouSolar.h"
 #include "SenzorMonitorizare.h"
 
-int main() {
+#include "MisiuneSera.h"
+
+namespace {
+int ruleazaDemoArhitectura() {
     std::cout << "========================================================\n"
               << "   GHIDUL ELECTRICIANULUI - MISIUNEA SERA INTELIGENTA   \n"
               << "                 ETAPA 2: ARHITECTURA POO               \n"
@@ -166,4 +170,18 @@ int main() {
               << "========================================================\n";
 
     return 0;
+}
+}
+
+int main(int argc, char* argv[]) {
+    if (argc == 2 && std::string_view(argv[1]) == "--demo") {
+        return ruleazaDemoArhitectura();
+    }
+    if (argc > 2) {
+        std::cerr << "Utilizare: oop_main [directorul cu date | --demo]\n";
+        return 1;
+    }
+    const auto date = argc == 2 ? std::filesystem::path(argv[1])
+                                : gasesteDirectorDate(argv[0]);
+    return ruleazaMisiuneSera(date, std::cin, std::cout, std::cerr);
 }

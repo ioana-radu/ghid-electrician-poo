@@ -53,6 +53,14 @@ ModulTeoretic& ModulTeoretic::operator=(const ModulTeoretic& altul) {
 }
 
 // 3. Getteri și Setteri
+void swap(ModulTeoretic& first, ModulTeoretic& second) noexcept {
+    using std::swap;
+    swap(first.denumire, second.denumire);
+    swap(first.dificultate, second.dificultate);
+    swap(first.puncteRecompensa, second.puncteRecompensa);
+    swap(first.esteDeblocat, second.esteDeblocat);
+}
+
 const std::string& ModulTeoretic::getDenumire() const {
     return denumire;
 }

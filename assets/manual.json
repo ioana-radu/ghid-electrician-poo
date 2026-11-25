@@ -1,0 +1,37 @@
+{
+  "sera": "Circuitul serei inteligente",
+  "tensiune": 24,
+  "secunde_pe_intrebare": 25,
+  "module": [
+    {
+      "id": 1,
+      "titlu": "Fundamente, protectii si conductoare",
+      "dificultate": 1,
+      "prag": 240,
+      "recompensa": {
+        "tip": "panou", "denumire": "Panou fotovoltaic", "tensiune": 24, "curent": 8,
+        "functionala": true, "eficienta": 0.20, "suprafata": 1.0, "unghi": 25
+      }
+    },
+    {
+      "id": 2,
+      "titlu": "Retele, circuite si echipamente",
+      "dificultate": 2,
+      "prag": 320,
+      "recompensa": {
+        "tip": "senzor", "denumire": "Senzor de umiditate", "tensiune": 24, "curent": 0.05,
+        "functionala": false, "marime": "Umiditate sol", "prag": 30, "offset": 0
+      }
+    },
+    {
+      "id": 3,
+      "titlu": "Impamantare, energie solara si siguranta",
+      "dificultate": 4,
+      "prag": 190,
+      "recompensa": {
+        "tip": "actuator", "denumire": "Pompa de irigare", "tensiune": 24, "curent": 2,
+        "functionala": true, "rol": "Irigarea serei", "putere": 48
+      }
+    }
+  ]
+}

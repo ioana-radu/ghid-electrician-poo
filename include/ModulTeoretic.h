@@ -27,6 +27,7 @@ public:
 
     // 2. Operator de atribuire (=)
     ModulTeoretic& operator=(const ModulTeoretic& altul);
+    friend void swap(ModulTeoretic& first, ModulTeoretic& second) noexcept;
 
     // 3. Getteri și Setteri
     [[nodiscard]] const std::string& getDenumire() const;

@@ -117,16 +117,19 @@ int NivelTreasureHunt::rezolvaQuiz(const std::vector<int>& raspunsuriDate) const
 }
 
 bool NivelTreasureHunt::finalizeazaNivel(int scorQuiz, int timpSecunde, int greseliQuiz) {
-    const int punctajTeorie = modulTeoretic.calculeazaPunctajFinal(timpSecunde, greseliQuiz);
-    const int scorTotal = scorQuiz + punctajTeorie;
+    if (scorQuiz < 0 || timpSecunde < 0 || greseliQuiz < 0) {
+        throw ConfiguratieInvalidaException("Scorul, timpul si numarul greselilor nu pot fi negative!");
+    }
+    if (nivelCompletat) {
+        return true;
+    }
 
-    if (scorTotal >= scorMinimPromovare) {
+    if (!intrebari.empty() && scorQuiz >= scorMinimPromovare) {
         nivelCompletat = true;
         modulTeoretic.deblocheazaModul();
         return true;
     }
 
-    nivelCompletat = false;
     return false;
 }
 
